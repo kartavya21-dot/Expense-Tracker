@@ -1,11 +1,16 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import "./Tracker.css";
+import axios from "axios";
+
+const backend = "http://localhost:8000/api/tracker/"
 
 const Tracker = () => {
   // const [categories, setCategories] = useState([])
   const [title, setTitle] = useState("")
   const [price, setPrice] = useState("")
-  const [datetime, setDatetime] = useState("")
+  const [created_at, setCreatedat] = useState("")
+  const [category, setCategory] = useState("")
+  const [expenses, setExpense] = useState([])
 
   const handleTitle = (e)=>{
     setTitle(e.target.value)
@@ -15,66 +20,63 @@ const Tracker = () => {
     setPrice(e.target.value)
     console.log(price);
   }
-  const handleDatetime = (e)=>{
-    setDatetime(e.target.value)
-    console.log(datetime);
+  const handleCreateat = (e)=>{
+    setCreatedat(e.target.value)
+    console.log(created_at);
   }
-  const handleSubmit = ()=>{
-
+  const handleCategory = (e)=>{
+    setCategory(e)
+    console.log(category)
+  }
+  const handleSubmit = async ()=>{
+    try{
+        console.log(title, price, created_at, category);
+        
+        await axios.post(backend, {
+            title,
+            price,
+            category,
+            created_at,
+        })
+        setTitle("");
+        setPrice("");
+        setCreatedat("");
+        setCategory("");
+        fetchExpense();
+    }catch(e){
+        console.log(e);   
+    }
+  }
+  const handleDelete = async (e) => {
+    try{
+        await axios.delete(`${backend}${e.title}/`)
+        fetchExpense();
+    }catch(err){
+        console.log(err);
+    }
   }
 
-  const categories = [
-    "groceries",
-    "apple",
-    "tomato",
-    "groceries",
-    "apple",
-    "tomato",
-    "groceries",
-    "apple",
-    "tomato",
-    "groceries",
-    "apple",
-    "tomato",
-  ];
-  const expenses = [
-    { title: "Banana", price: 20, category: "Fruit", date: "2024-05-20 20:14" },
-    { title: "Milk", price: 45, category: "Dairy", date: "2024-05-21 09:10" },
-    {
-      title: "Bus Ticket",
-      price: 15,
-      category: "Transport",
-      date: "2024-05-21 18:40",
-    },
-    {
-      title: "Movie",
-      price: 250,
-      category: "Entertainment",
-      date: "2024-05-22 21:30",
-    },
-    {
-      title: "Shirt",
-      price: 799,
-      category: "Clothing",
-      date: "2024-05-23 16:45",
-    },
-    {
-      title: "Coffee",
-      price: 120,
-      category: "Beverage",
-      date: "2024-05-24 10:15",
-    },
-    { title: "Bread", price: 40, category: "Bakery", date: "2024-05-24 08:00" },
-    {
-      title: "Electricity Bill",
-      price: 1200,
-      category: "Utilities",
-      date: "2024-05-25 11:25",
-    },
-  ];
+  const fetchExpense = async () => {
+    try{
+        const response = await axios.get(backend);
+        setExpense(response.data);
+    }catch(e){
+        console.log(e);
+    }
+  }
+
+  useEffect(()=>{
+    fetchExpense();
+  }, [])
+
+  const categories = expenses.map(item => item.category)
+
   return (
     <div id="expense-tracker">
-      <form id="expense-form">
+      <form id="expense-form" onSubmit={(e) =>{
+        e.preventDefault();
+        handleSubmit();
+      }}>
         <input
           type="text"
           name="title"
@@ -86,18 +88,20 @@ const Tracker = () => {
         <input
           type="number"
           name="price"
+          value={price}
           className="price input-field"
           placeholder="Enter price"
           onChange={handlePrice}
         />
-        <input type="datetime-local" name="created-at" id="date" onChange={handleDatetime}/>
+        <input type="datetime-local" value={created_at} name="created-at" id="date" onChange={handleCreateat}/>
+        
         <div className="categories-selection">
           {categories.map((item, index) => (
-            <button className="category" key={index}>{item}</button>
+            <button className="category" type="button" onClick={()=>handleCategory(item)} key={index}>{item}</button>
           ))}
-          <button className="category">+</button>
+          <button className="category" type="button">+</button>
         </div>
-        <button type="submit" onClick={handleSubmit} className="button-41" id="submit-button">
+        <button type="submit" className="button-41" id="submit-button">
           Add Expense
         </button>
       </form>
@@ -121,7 +125,7 @@ const Tracker = () => {
                     </div>
                     <div className="expense-button">
                         <button className="edit-btn button-41">Edit</button>
-                        <button className="delete-btn button-41">Delete</button>
+                        <button className="delete-btn button-41" onClick={()=>handleDelete(expense)}>Delete</button>
                     </div>
                 </div>
             )

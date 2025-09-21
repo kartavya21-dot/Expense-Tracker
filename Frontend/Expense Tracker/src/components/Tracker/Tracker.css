@@ -30,6 +30,7 @@
 }
 
 #expense-tracker{
+    min-height: 100dvh;
     margin: auto;
     width: 60dvw;
     background-color: whitesmoke;
@@ -111,6 +112,7 @@
 .expense-card{
     /* border: 1px solid blue; */
     margin-top: 10px;
+    margin-bottom: 10px;
     display: flex;
     align-items: center;
     justify-content: space-between;
