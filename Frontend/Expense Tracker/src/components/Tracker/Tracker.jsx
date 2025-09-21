@@ -42,34 +42,43 @@ const Tracker = () => {
         setPrice("");
         setCreatedat("");
         setCategory("");
-        fetchExpense();
+        fetchExpense("", "");
     }catch(e){
         console.log(e);   
     }
   }
-  const handleDelete = async (e) => {
-    try{
-        await axios.delete(`${backend}${e.title}/`)
-        fetchExpense();
+  const handleDelete = (expense) => () => deleteExpense(expense);
+
+  const deleteExpense = async (expense) => {
+     try{
+        await axios.delete(`${backend}${expense.id}/`, {})
+        fetchExpense("","");
     }catch(err){
         console.log(err);
     }
   }
 
-  const fetchExpense = async () => {
+  const fetchExpense = async (ordering, filtering) => {
     try{
-        const response = await axios.get(backend);
+        const response = await axios.get(`${backend}${ordering}${filtering}`);
         setExpense(response.data);
     }catch(e){
         console.log(e);
     }
   }
 
+  const sortNewest = () =>{
+    fetchExpense("?ordering=created_at", "");
+}
+const sortOldest = () =>{
+      fetchExpense("?ordering=-created_at", "");
+  }
+
   useEffect(()=>{
-    fetchExpense();
+    fetchExpense("","");
   }, [])
 
-  const categories = expenses.map(item => item.category)
+  const categories = [... new Set(expenses.map(item => item.category))]
 
   return (
     <div id="expense-tracker">
@@ -107,8 +116,8 @@ const Tracker = () => {
       </form>
       <hr />
         <div className="search-filter">
-            <button className="sort-filter">Newest First</button>
-            <button className="sort-filter">Newest Last</button>
+            <button className="sort-filter" onClick={sortNewest}>Newest First</button>
+            <button className="sort-filter" onClick={sortOldest}>Newest Last</button>
             <input type="date" name="search-date" className="sort-fliter" />
         </div>
       <hr />
@@ -125,7 +134,7 @@ const Tracker = () => {
                     </div>
                     <div className="expense-button">
                         <button className="edit-btn button-41">Edit</button>
-                        <button className="delete-btn button-41" onClick={()=>handleDelete(expense)}>Delete</button>
+                        <button className="delete-btn button-41" onClick={handleDelete(expense)}>Delete</button>
                     </div>
                 </div>
             )

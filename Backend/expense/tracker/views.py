@@ -9,10 +9,10 @@ class TrackerViewSet(viewsets.ModelViewSet):
     serializer_class = ExpenseSerializer
     
     def get_queryset(self):
-        queryset = Expense.objects
+        queryset = Expense.objects.all()
         ordering = self.request.query_params.get('ordering', '-created_at')
 
-        if ordering in ['created-at', '-created_at']:
+        if ordering in ['created_at', '-created_at']:
             queryset = queryset.order_by(ordering)
         
         date_filter = self.request.query_params.get('date', None)
