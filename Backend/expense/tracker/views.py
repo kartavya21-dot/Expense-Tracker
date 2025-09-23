@@ -4,6 +4,8 @@ from rest_framework import viewsets, permissions, generics
 from .models import Expense
 from datetime import datetime
 
+# class 
+
 # Create your views here.
 class TrackerViewSet(viewsets.ModelViewSet):
     serializer_class = ExpenseSerializer
@@ -16,6 +18,7 @@ class TrackerViewSet(viewsets.ModelViewSet):
             queryset = queryset.order_by(ordering)
         
         date_filter = self.request.query_params.get('date', None)
+        print(date_filter, " ")
         
         if date_filter:
             try:
