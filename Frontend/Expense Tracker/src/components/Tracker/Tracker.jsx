@@ -3,10 +3,10 @@ import "./Tracker.css";
 import axios from "axios";
 import { use } from "react";
 
-const backend = "http://localhost:8000/api/tracker/";
+const backend = "http://localhost:8000/api/";
 
 const Tracker = () => {
-  const [selected, setSelected] = useState(null)
+  const [selected, setSelected] = useState(null);
   const [title, setTitle] = useState("");
   const [price, setPrice] = useState("");
   const [created_at, setCreatedat] = useState("");
@@ -18,34 +18,29 @@ const Tracker = () => {
 
   const handleTitle = (e) => {
     setTitle(e.target.value);
-    // console.log(title);
   };
   const handlePrice = (e) => {
     setPrice(e.target.value);
-    console.log(price);
   };
   const handleCreateat = (e) => {
     setCreatedat(e.target.value);
-    console.log(created_at);
   };
   const handleCategory = (e) => {
-    setSelected(e)
+    setSelected(e);
     setCategory(e);
-    console.log(category);
+    setEditCategory(e);
   };
   const handleNewCat = (e) => {
     setNewCat(e.target.value);
-    console.log(e);
-    
-  }
+  };
   const handleSearchDate = (e) => {
     setSearchDate(e.target.value);
-  }
+  };
+
   const handleSubmit = async () => {
     try {
-      console.log(title, price, created_at, category);
 
-      await axios.post(backend, {
+      await axios.post(`${backend}tracker/`, {
         title,
         price,
         category,
@@ -60,11 +55,25 @@ const Tracker = () => {
       console.log(e);
     }
   };
+
+  const createNewCategory = async (name) => {
+    try {
+      await axios.post(`${backend}categories/`, {
+        name,
+      });
+      setNewCat("");
+      setEditNewCat("");
+      fetchCategories();
+    } catch (e) {
+      console.log(e);
+    }
+  };
+
   const handleDelete = (expense) => () => deleteExpense(expense);
 
   const deleteExpense = async (expense) => {
     try {
-      await axios.delete(`${backend}${expense.id}/`, {});
+      await axios.delete(`${backend}tracker/${expense.id}/`, {});
       fetchExpense("", "");
     } catch (err) {
       console.log(err);
@@ -73,8 +82,19 @@ const Tracker = () => {
 
   const fetchExpense = async (ordering, filtering) => {
     try {
-      const response = await axios.get(`${backend}${ordering}${filtering}`);
+      const response = await axios.get(
+        `${backend}tracker/${ordering}${filtering}`
+      );
       setExpense(response.data);
+    } catch (e) {
+      console.log(e);
+    }
+  };
+
+  const fetchCategories = async () => {
+    try {
+      const response = await axios.get(`${backend}categories/`);
+      setCategories(response.data);
     } catch (e) {
       console.log(e);
     }
@@ -88,30 +108,13 @@ const Tracker = () => {
   };
   const sortOnSearchDate = () => {
     console.log(searchDate);
-    fetchExpense("", `?date=${searchDate.slice(0, 10)}`)
-  }
-
-  const createNewCategory = () => {
-    const a = categories;
-    a.push(newCat)
-    console.log(a)
-    console.log(newCat)
-    setCategory(a)
-  }
-
-  useEffect(()=>{
-    
-  }, [])
+    fetchExpense("", `?date=${searchDate.slice(0, 10)}`);
+  };
 
   useEffect(() => {
     fetchExpense("", "");
+    fetchCategories();
   }, []);
-
-  // useEffect(()=>{
-  //   setCategories(...new Set(expenses.map((item) => item.category)));
-  // }, []);
-
-  // const categories = [...new Set(expenses.map((item) => item.category))];
 
   return (
     <div id="expense-tracker">
@@ -123,7 +126,8 @@ const Tracker = () => {
         }}
       >
         <input
-          type="text"          name="title"
+          type="text"
+          name="title"
           value={title}
           className="title input-field"
           placeholder="Enter title"
@@ -138,7 +142,7 @@ const Tracker = () => {
           onChange={handlePrice}
         />
         <input
-          type="datetime-local"
+          type="date"
           value={created_at}
           name="created-at"
           id="date"
@@ -153,11 +157,20 @@ const Tracker = () => {
               onClick={() => handleCategory(item)}
               key={index}
             >
-              {item}
+              {item.name}
             </button>
           ))}
-          <input type="text" value={newCat} onChange={handleNewCat} className="category category-input" />
-          <button className="category" onClick={createNewCategory} type="button">
+          <input
+            type="text"
+            value={newCat}
+            onChange={handleNewCat}
+            className="category category-input"
+          />
+          <button
+            className="category"
+            onClick={() => createNewCategory(newCat)}
+            type="button"
+          >
             +
           </button>
         </div>
@@ -167,14 +180,24 @@ const Tracker = () => {
       </form>
       <hr />
       <div className="search-filter">
-        <button className="sort-filter" onClick={sortNewest}>
+        <button className="sort-filter" type="button" onClick={sortNewest}>
           Oldest
         </button>
-        <button className="sort-filter" onClick={sortOldest}>
+        <button className="sort-filter" type="button" onClick={sortOldest}>
           Newest
         </button>
-        <input type="date" value={searchDate} onChange={handleSearchDate} name="search-date" className="sort-fliter" />
-        <button className="sort-filter" onClick={sortOnSearchDate}>
+        <input
+          type="date"
+          value={searchDate}
+          onChange={handleSearchDate}
+          name="search-date"
+          className="sort-fliter"
+        />
+        <button
+          className="sort-filter"
+          type="button"
+          onClick={sortOnSearchDate}
+        >
           Search
         </button>
       </div>
@@ -188,12 +211,14 @@ const Tracker = () => {
                 <p>
                   <strong>Price:</strong> {expense.price}
                 </p>
-                <button className="category">{expense.category}</button>
+                <button className="category" type="button">
+                  {expense.category.name}
+                </button>
               </div>
             </div>
             <div className="expense-button">
-              <button className="edit-btn button-41">Edit</button>
               <button
+                type="button"
                 className="delete-btn button-41"
                 onClick={handleDelete(expense)}
               >

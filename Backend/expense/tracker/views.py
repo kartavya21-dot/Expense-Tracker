@@ -1,10 +1,12 @@
 from django.shortcuts import render
-from .serializers import ExpenseSerializer
+from .serializers import ExpenseSerializer, CategorySerializer
 from rest_framework import viewsets, permissions, generics
-from .models import Expense
+from .models import Expense, Category
 from datetime import datetime
 
-# class 
+class CategoryViewSet(viewsets.ModelViewSet):
+    serializer_class = CategorySerializer
+    queryset = Category.objects.all()
 
 # Create your views here.
 class TrackerViewSet(viewsets.ModelViewSet):
