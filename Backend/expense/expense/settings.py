@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
 from pathlib import Path
+from datetime import timedelta
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -25,7 +26,17 @@ SECRET_KEY = 'django-insecure-+8&sju-swha3^c3*c20bj&glxpgc)g-80m2b!mnl21#s51m4$1
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["localhost", '127.0.0.1']
+
+REST_FRAMEWORK = {
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticated',  # default: login required
+    ],
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ],
+}
+
 
 
 # Application definition
@@ -52,6 +63,13 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'corsheaders.middleware.CorsMiddleware',
 ]
+
+SIMPLE_JWT = {
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=70000),  # access token valid for 1 hour
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=7),     # refresh token valid for 7 days
+    "ROTATE_REFRESH_TOKENS": False,                 # refresh token stays the same when used
+    "BLACKLIST_AFTER_ROTATION": True,               # only matters if rotating
+}
 
 
 CORS_ALLOW_ALL_ORIGINS = True

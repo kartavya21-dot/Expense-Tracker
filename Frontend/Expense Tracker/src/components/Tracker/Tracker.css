@@ -29,6 +29,13 @@
   background: #00bd68;
 }
 
+.logout{
+    position: fixed;
+    left: 0;
+    max-width: 100px;
+    margin-top: 10px;
+}
+
 #expense-tracker{
     position: relative;
     min-height: 100dvh;
@@ -54,7 +61,8 @@
 
 .input-field{
     font-size: 20px;
-    width: 80%;
+    width: 45dvw;
+    max-width: 500px;
     padding: 5px 10px;
     border: 1px solid black;
     border-radius: 8px;

@@ -1,19 +1,38 @@
 from django.shortcuts import render
-from .serializers import ExpenseSerializer, CategorySerializer
+from rest_framework.permissions import AllowAny
+from .serializers import ExpenseSerializer, CategorySerializer, RegisterSerializer
 from rest_framework import viewsets, permissions, generics
 from .models import Expense, Category
 from datetime import datetime
 
+class RegisterView(generics.CreateAPIView):
+    serializer_class = RegisterSerializer
+    permission_classes = [AllowAny]
+
+class IsOwner(permissions.BasePermission):
+    def has_object_permission(self, request, view, obj):
+        return obj.user == request.user
+
 class CategoryViewSet(viewsets.ModelViewSet):
     serializer_class = CategorySerializer
-    queryset = Category.objects.all()
+    permission_classes = [permissions.IsAuthenticated]
+    def get_queryset(self):
+        return Category.objects.filter(user=self.request.user)
+    
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
+
 
 # Create your views here.
 class TrackerViewSet(viewsets.ModelViewSet):
     serializer_class = ExpenseSerializer
+    permission_classes = [permissions.IsAuthenticated, IsOwner]
+    
+    # def perform_create(self, serializer):
+    #     serializer.save(user=self.request.user)
     
     def get_queryset(self):
-        queryset = Expense.objects.all()
+        queryset = Expense.objects.filter(user=self.request.user)
         ordering = self.request.query_params.get('ordering', '-created_at')
 
         if ordering in ['created_at', '-created_at']:

@@ -1,20 +1,26 @@
 import React, { useEffect, useState } from "react";
 import "./Tracker.css";
 import axios from "axios";
-import { use } from "react";
 
 const backend = "http://localhost:8000/api/";
 
 const Tracker = () => {
+  useEffect(() => {
+    fetchExpense("", "");
+    fetchCategories();
+    setSearchDate("");
+  }, []);
+
+  const [expenses, setExpense] = useState([]);
+  const [newCat, setNewCat] = useState("");
+  const [categories, setCategories] = useState([]);
+
+  // Handling Data
   const [selected, setSelected] = useState(null);
   const [title, setTitle] = useState("");
   const [price, setPrice] = useState("");
   const [created_at, setCreatedat] = useState("");
-  const [category, setCategory] = useState("");
-  const [expenses, setExpense] = useState([]);
-  const [newCat, setNewCat] = useState("");
-  const [categories, setCategories] = useState([]);
-  const [searchDate, setSearchDate] = useState("");
+  const [category, setCategory] = useState();
 
   const handleTitle = (e) => {
     setTitle(e.target.value);
@@ -25,10 +31,11 @@ const Tracker = () => {
   const handleCreateat = (e) => {
     setCreatedat(e.target.value);
   };
-  const handleCategory = (e) => {
-    setSelected(e);
-    setCategory(e);
-    setEditCategory(e);
+  const handleCategory = (item) => {
+    // console.log(item);
+
+    setSelected(item);
+    setCategory(item);
   };
   const handleNewCat = (e) => {
     setNewCat(e.target.value);
@@ -37,19 +44,30 @@ const Tracker = () => {
     setSearchDate(e.target.value);
   };
 
+  // Axios Area
   const handleSubmit = async () => {
+    // console.log(`${backend}tracker/`, title, price, category, created_at);
     try {
-
-      await axios.post(`${backend}tracker/`, {
-        title,
-        price,
-        category,
-        created_at,
-      });
+      console.log(title, price, category, created_at);
+      await axios.post(
+        `${backend}tracker/`,
+        {
+          title,
+          price,
+          category,
+          created_at,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("access")}`,
+          },
+        }
+      );
       setTitle("");
       setPrice("");
       setCreatedat("");
       setCategory("");
+      setSelected("");
       fetchExpense("", "");
     } catch (e) {
       console.log(e);
@@ -58,11 +76,18 @@ const Tracker = () => {
 
   const createNewCategory = async (name) => {
     try {
-      await axios.post(`${backend}categories/`, {
-        name,
-      });
+      await axios.post(
+        `${backend}categories/`,
+        {
+          name,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("access")}`,
+          },
+        }
+      );
       setNewCat("");
-      setEditNewCat("");
       fetchCategories();
     } catch (e) {
       console.log(e);
@@ -73,7 +98,9 @@ const Tracker = () => {
 
   const deleteExpense = async (expense) => {
     try {
-      await axios.delete(`${backend}tracker/${expense.id}/`, {});
+      await axios.delete(`${backend}tracker/${expense.id}/`, {
+        headers: { Authorization: `Bearer ${localStorage.getItem("access")}` },
+      });
       fetchExpense("", "");
     } catch (err) {
       console.log(err);
@@ -81,10 +108,20 @@ const Tracker = () => {
   };
 
   const fetchExpense = async (ordering, filtering) => {
+    let url = backend + "tracker/";
+    let params = [];
+
+    if (ordering) params.push(`ordering=${ordering}`);
+    if (filtering) params.push(`date=${filtering}`);
+
+    if (params.length > 0) {
+      url += "?" + params.join("&");
+    }
+
     try {
-      const response = await axios.get(
-        `${backend}tracker/${ordering}${filtering}`
-      );
+      const response = await axios.get(url, {
+        headers: { Authorization: `Bearer ${localStorage.getItem("access")}` },
+      });
       setExpense(response.data);
     } catch (e) {
       console.log(e);
@@ -93,31 +130,38 @@ const Tracker = () => {
 
   const fetchCategories = async () => {
     try {
-      const response = await axios.get(`${backend}categories/`);
+      const response = await axios.get(`${backend}categories/`, {
+        headers: { Authorization: `Bearer ${localStorage.getItem("access")}` },
+      });
       setCategories(response.data);
     } catch (e) {
       console.log(e);
     }
   };
 
+  // Searching & Sorting
+  const [searchDate, setSearchDate] = useState("");
+
   const sortNewest = () => {
-    fetchExpense("?ordering=created_at", "");
-  };
-  const sortOldest = () => {
-    fetchExpense("?ordering=-created_at", "");
-  };
-  const sortOnSearchDate = () => {
-    console.log(searchDate);
-    fetchExpense("", `?date=${searchDate.slice(0, 10)}`);
+    fetchExpense("created_at", "");
   };
 
-  useEffect(() => {
-    fetchExpense("", "");
-    fetchCategories();
-  }, []);
+  const sortOldest = () => {
+    fetchExpense("-created_at", "");
+  };
+
+  const sortOnSearchDate = () => {
+    fetchExpense("", searchDate.slice(0, 10));
+  };
+  const handleLogout = () => {
+    localStorage.removeItem("access");
+    localStorage.removeItem("refresh");
+    setToken(null);
+  }
 
   return (
     <div id="expense-tracker">
+      <button type="button" className="logout delete-btn button-41" onClick={handleLogout}>Logout</button>
       <form
         id="expense-form"
         onSubmit={(e) => {
@@ -180,10 +224,10 @@ const Tracker = () => {
       </form>
       <hr />
       <div className="search-filter">
-        <button className="sort-filter" type="button" onClick={sortNewest}>
+        <button className="sort-filter" type="button" onClick={sortOldest}>
           Oldest
         </button>
-        <button className="sort-filter" type="button" onClick={sortOldest}>
+        <button className="sort-filter" type="button" onClick={sortNewest}>
           Newest
         </button>
         <input
